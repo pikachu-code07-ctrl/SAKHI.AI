@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SakhiAI - Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1E1640;--panel:#2A2058;--line:#3C3178;--ink:#EEEAFF;--mute:#B4ABDD;--l1:#3DD6B0;--l2:#FFC857;--l3:#FF8A5B;--l4:#FF4D6D}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Nunito,system-ui,sans-serif}
+.app{max-width:440px;margin:0 auto;padding:16px 16px 100px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font:700 26px Fraunces,Georgia,serif;margin:0}h2{font:600 17px Fraunces,Georgia,serif;margin:0 0 8px}
+.badge{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:4px 10px;color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin:8px 0 0}
+.halo{text-align:center;margin:18px 0 4px;--c:var(--l1)}
+.halo svg{width:230px;height:230px;filter:drop-shadow(0 0 16px var(--c))}
+.track{stroke:var(--line)}.bar{stroke:var(--c);transition:stroke-dashoffset .6s,stroke .6s}
+.lvl{font-weight:700;color:var(--c);margin-top:-6px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+.chip{background:#1E1640;border:1px solid var(--line);border-radius:99px;padding:8px 14px;font-size:14px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--l2);outline-offset:2px}
+#log{max-height:220px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.m{padding:8px 12px;border-radius:14px;max-width:85%}.m.s{background:#382C75;align-self:flex-start}.m.u{background:var(--l1);color:#102;align-self:flex-end}
+form.row{display:flex;gap:8px;margin-top:10px}
+input[type=text],input[type=password]{flex:1;min-width:0;background:#1E1640;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:10px;font:inherit}
+.go{background:var(--l1);color:#102;border:0;border-radius:12px;padding:10px 16px;font-weight:700}
+#feed{list-style:none;margin:0;padding:0;max-height:210px;overflow:auto;font-size:14px}
+#feed li{border-left:3px solid var(--line);padding:2px 0 2px 10px;margin-bottom:6px}
+#feed .l2{border-color:var(--l2)}#feed .l3{border-color:var(--l3)}#feed .l4{border-color:var(--l4)}
+small{color:var(--mute)}
+#guide{border-color:var(--l2)}#alert{border-color:var(--l4);background:#4A1838}
+.bar-nav{position:fixed;left:0;right:0;bottom:0;background:#161032;border-top:1px solid var(--line);padding:10px}
+.bar-nav div{max-width:440px;margin:0 auto;display:flex;gap:8px}
+.bar-nav button{flex:1;border-radius:12px;border:1px solid var(--line);background:var(--panel);padding:12px 4px;font-weight:600}
+.bar-nav .sos{flex:1.4;background:var(--l4);border-color:var(--l4);color:#fff;font-weight:700}
+dialog{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:360px;width:calc(100% - 32px);text-align:center}
+dialog::backdrop{background:rgba(10,6,30,.85)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.pad button{background:#1E1640;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:20px}
+#dots{font-size:28px;letter-spacing:8px;min-height:40px}
+pre{text-align:left;white-space:pre-wrap;font:13px/1.5 ui-monospace,monospace;max-height:50vh;overflow:auto;background:#1E1640;padding:10px;border-radius:10px}
+label{display:block;text-align:left;font-size:14px;color:var(--mute);margin-top:10px}
+[hidden]{display:none!important}
+</style></head><body><div class="app">
+<header><h1>SakhiAI</h1><span class="badge">Prototype: alerts are simulated</span></header>
+<p class="note">Raat ki Saathi. No real police call or SMS is sent from this demo.</p>
+<div class="halo" id="halo"><svg viewBox="0 0 230 230" role="img" aria-label="Risk score">
+<circle class="track" cx="115" cy="115" r="90" fill="none" stroke-width="14"/>
+<circle class="bar" id="bar" cx="115" cy="115" r="90" fill="none" stroke-width="14" stroke-linecap="round" transform="rotate(-90 115 115)" stroke-dasharray="565.5" stroke-dashoffset="565.5"/>
+<text id="score" x="115" y="128" text-anchor="middle" fill="#EEEAFF" font-family="Fraunces,Georgia,serif" font-size="56" font-weight="700">0</text>
+<text x="115" y="154" text-anchor="middle" fill="#B4ABDD" font-size="14">risk score</text></svg>
+<div class="lvl" id="lvl">Level 1: Normal</div></div>
+<section id="alert" hidden><h2>Emergency alert sent (simulated)</h2><p id="alertTxt"></p><button class="chip" id="openReport">Open incident report</button></section>
+<section id="guide" hidden><h2>Safe-haven guidance</h2><p>Nearest safe place: 24x7 medical store, 120 m ahead. Walk straight and stay on the lit side of the road.</p></section>
+<section><h2>Try a danger signal</h2><div class="chips" id="sig"></div><p class="note">Signals add to the risk score. Level 3 starts a 10-second cancel countdown. Level 4 sends the alert.</p></section>
+<section><h2>Chat with Sakhi</h2><div id="log" aria-live="polite"></div>
+<form class="row" id="chat"><input type="text" id="msg" placeholder="Sakhi se baat karo" aria-label="Message" autocomplete="off"><button class="go">Send</button></form>
+<label><input type="checkbox" id="voice"> Sakhi speaks (Hindi voice)</label></section>
+<section><h2>Family and police feed (simulated)</h2><ol id="feed"></ol></section>
+</div>
+<nav class="bar-nav"><div><button class="sos" id="sos">SOS</button><button id="fake">Fake call</button><button id="rep">Report</button><button id="set">Settings</button></div></nav>
+
+<dialog id="cd"><h2>Are you safe?</h2><p>Alert goes out in <b id="sec">10</b> seconds. Enter your cancel PIN.</p><div id="dots" aria-live="polite"></div><div class="pad" id="pad"></div><small id="pinMsg"></small></dialog>
+<dialog id="call"><h2 id="who"></h2><p id="callTxt">Incoming call</p><div class="chips" style="justify-content:center"><button class="go" id="acc">Accept</button><button class="chip" id="dec">End</button></div></dialog>
+<dialog id="report"><h2>Incident report</h2><pre id="repTxt"></pre><div class="chips" style="justify-content:center;margin-top:10px"><button class="chip" id="copy">Copy</button><button class="chip" id="closeRep">Close</button></div></dialog>
+<dialog id="cfg"><h2>Settings</h2><form id="cfgForm">
+<label>Code word (say it in chat for a silent alert)<input type="text" id="cCode"></label>
+<label>Cancel PIN (4 digits)<input type="password" id="cPin" inputmode="numeric" maxlength="4"></label>
+<label>Duress PIN (looks like cancel, sends silent alert)<input type="password" id="cDur" inputmode="numeric" maxlength="4"></label>
+<label>Emergency contact name<input type="text" id="cName"></label>
+<div class="chips" style="justify-content:center;margin-top:14px"><button class="go">Save</button><button type="button" class="chip" id="cfgX">Close</button></div></form></dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const st={score:0,level:1,emergency:false,cd:null,pin:"",asked:null,feed:[],chat:[],q:0,cfg:{code:"chai",pin:"1234",duress:"9999",name:"Mummy"}};
+const COL=["","var(--l1)","var(--l2)","var(--l3)","var(--l4)"],NAME=["","Normal","Suspicious","Danger","Emergency"];
+const lv=s=>s<31?1:s<61?2:s<86?3:4;
+const now=()=>new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+function log(x,l=1){st.feed.push(now()+"  "+x);const li=document.createElement("li");li.className="l"+l;const t=document.createElement("small");t.textContent=now()+" ";li.append(t,x);$("#feed").append(li);$("#feed").scrollTop=1e6}
+function say(x){st.chat.push("Sakhi: "+x);bub("s",x);if($("#voice").checked&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(x);u.lang="hi-IN";speechSynthesis.cancel();speechSynthesis.speak(u)}}
+function bub(c,x){const d=document.createElement("div");d.className="m "+c;d.textContent=x;$("#log").append(d);$("#log").scrollTop=1e6}
+function render(){const L=st.emergency&&!st.silent?4:lv(st.score);$("#bar").style.strokeDashoffset=565.5*(1-st.score/100);$("#score").textContent=Math.round(st.score);$("#lvl").textContent="Level "+L+": "+NAME[L];$("#halo").style.setProperty("--c",COL[L]);return L}
+function update(){const L=render(),prev=st.level;st.level=L;if(L>prev)onLevel(L)}
+function onLevel(L){if(L===2){say("Sab theek hai? 'Haan' bolkar batao.");log("Level 2: Sakhi checks in. Family gets a soft notification.",2);guide()}
+if(L===3){log("Level 3: family notified with live location. Silent recording started.",3);guide();openCd()}
+if(L===4)fire()}
+function guide(){if($("#guide").hidden){$("#guide").hidden=false;say("Paas mein 120 meter aage 24 ghante khula medical store hai. Wahan chalo.")}}
+function signal(n,p){if(st.emergency)return;st.score=Math.min(100,st.score+p);log("Signal: "+n+" (+"+p+")",2);update()}
+function fire(silent){if(st.emergency)return;st.emergency=true;st.silent=!!silent;clearInterval(st.cd);if($("#cd").open)$("#cd").close();
+log("Level 4: auto-alert to 112, "+st.cfg.name+" and helpline 1091 with live location, audio and user details (simulated).",4);log("Evidence report generated. Open Report to view it.",4);
+if(!silent){st.score=100;$("#alert").hidden=false;$("#alertTxt").textContent="112, "+st.cfg.name+" and 1091 now see your live location. Audio is being saved.";render();st.level=4}}
+function openCd(){st.pin="";dots();$("#pinMsg").textContent="";let s=10;$("#sec").textContent=s;$("#cd").showModal();
+st.cd=setInterval(()=>{s--;$("#sec").textContent=s;if(s<=0){clearInterval(st.cd);$("#cd").close();st.score=100;fire()}},1000)}
+function dots(){$("#dots").textContent="\u25CF".repeat(st.pin.length)||"\u00A0"}
+$("#pad").innerHTML=[1,2,3,4,5,6,7,8,9,"C",0,"OK"].map(k=>`<button data-k="${k}">${k}</button>`).join("");
+$("#pad").onclick=e=>{const k=e.target.dataset.k;if(k===undefined)return;if(k==="C")st.pin="";else if(k==="OK"){}else if(st.pin.length<4)st.pin+=k;dots();
+if(st.pin.length===4){if(st.pin===st.cfg.pin){clearInterval(st.cd);$("#cd").close();st.score=10;st.level=1;render();log("Cancelled by user with PIN. Back to Level 1.");say("Alert cancel ho gaya. Main saath hoon.")}
+else if(st.pin===st.cfg.duress){clearInterval(st.cd);$("#cd").close();st.score=10;render();say("Alert cancel ho gaya. Main saath hoon.");log("Duress PIN used. User sees 'cancelled', but a silent alert went to 112 and "+st.cfg.name+".",4);fire(true)}
+else{st.pin="";dots();$("#pinMsg").textContent="Wrong PIN. Try again."}}};
+function reply(t){const l=t.toLowerCase();
+if(l.includes(st.cfg.code.toLowerCase())&&!st.emergency){log('Code word "'+st.cfg.code+'" detected. Silent alert sent to family and 112 (simulated). Chat still looks normal.',4);fire(true);return"Achha, theek hai. Main tumhare saath hoon."}
+if(/dar|scared|ghabra|afraid/.test(l)){signal("User says she is scared",10);return"Main yahin hoon. Lambi saans lo aur kisi roshan, khuli jagah ki taraf chalo."}
+if(/haan|yes|theek|fine/.test(l)&&!st.emergency){st.score=Math.max(0,st.score-15);log("User confirmed she is fine. Risk lowered.");update();return"Achha, main dhyaan rakh rahi hoon."}
+return["Achha! Ghar kitna door hai?","Raasta theek lag raha hai? Main location dekh rahi hoon.","Main saath hoon. Aur batao."][st.q++%3]}
+$("#chat").onsubmit=e=>{e.preventDefault();const t=$("#msg").value.trim();if(!t)return;$("#msg").value="";st.asked=null;st.chat.push("You: "+t);bub("u",t);setTimeout(()=>say(reply(t)),500)};
+function checkin(){const q=["Mummy ko call kiya?","Dawai li?"][st.q++%2];say(q);st.asked=Date.now();setTimeout(()=>{if(st.asked&&Date.now()-st.asked>=19000){st.asked=null;signal("No reply to check-in",15)}},20000)}
+[["Route change",20],["Scream detected",35],["Phone dropped",30],["Stopped 5 min",15]].forEach(([n,p])=>{const b=document.createElement("button");b.className="chip";b.textContent=n;b.onclick=()=>signal(n,p);$("#sig").append(b)});
+[["Sakhi check-in",checkin],["Reset demo",reset]].forEach(([n,f])=>{const b=document.createElement("button");b.className="chip";b.textContent=n;b.onclick=f;$("#sig").append(b)});
+$("#sos").onclick=()=>{if(st.emergency||$("#cd").open)return;log("SOS button pressed by user.",3);st.score=Math.max(st.score,70);update()};
+$("#fake").onclick=()=>{$("#who").textContent=st.cfg.name+" calling";$("#callTxt").textContent="Incoming call";$("#acc").hidden=false;$("#call").showModal()};
+$("#acc").onclick=()=>{$("#callTxt").textContent="Connected. Talk normally, then end the call.";$("#acc").hidden=true};
+$("#dec").onclick=()=>$("#call").close();
+function showReport(){$("#repTxt").textContent=["SAKHIAI INCIDENT REPORT (demo)","Generated: "+new Date().toLocaleString(),"","Location trail (demo coordinates):","  28.6139, 77.2090  >  28.6144, 77.2101  >  28.6152, 77.2113","","Events:",...st.feed.map(x=>"  "+x),"","Chat transcript:",...st.chat.map(x=>"  "+x)].join("\n");$("#report").showModal()}
+$("#rep").onclick=showReport;$("#openReport").onclick=showReport;$("#closeRep").onclick=()=>$("#report").close();
+$("#copy").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($("#repTxt").textContent);$("#copy").textContent="Copied"};
+$("#set").onclick=()=>{$("#cCode").value=st.cfg.code;$("#cPin").value=st.cfg.pin;$("#cDur").value=st.cfg.duress;$("#cName").value=st.cfg.name;$("#cfg").showModal()};
+$("#cfgX").onclick=()=>$("#cfg").close();
+$("#cfgForm").onsubmit=e=>{e.preventDefault();const p=$("#cPin").value,d=$("#cDur").value;if(!/^\d{4}$/.test(p)||!/^\d{4}$/.test(d)||p===d){alert("PINs must be 4 digits and different from each other.");return}
+Object.assign(st.cfg,{code:$("#cCode").value.trim()||"chai",pin:p,duress:d,name:$("#cName").value.trim()||"Mummy"});$("#cfg").close()};
+function reset(){clearInterval(st.cd);["cd","call","report","cfg"].forEach(i=>$("#"+i).open&&$("#"+i).close());Object.assign(st,{score:0,level:1,emergency:false,silent:false,asked:null,feed:[],chat:[],q:0});$("#feed").innerHTML="";$("#log").innerHTML="";$("#alert").hidden=true;$("#guide").hidden=true;render();start()}
+function start(){log("Journey started. Live tracking is on.");say("Namaste! Main Sakhi hoon. Tum ghar jaa rahi ho na? Main saath hoon.")}
+setInterval(()=>{if(!st.emergency&&st.score>0&&!$("#cd").open){st.score=Math.max(0,st.score-1);const L=render();st.level=L}},4000);
+render();start();
+</script></body></html>
